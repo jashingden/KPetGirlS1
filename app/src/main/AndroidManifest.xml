@@ -20,7 +20,6 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name">
-
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,6 +27,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".MovieActivity"
+            android:screenOrientation="landscape" />
         <!--
         <activity android:name=".TestActivity">
             <intent-filter>
@@ -40,15 +42,14 @@
             android:name="com.eddy.kpetgirls1.KPetGirlS1Activity"
             android:label="@string/app_name_kpetgirls1"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"></activity>
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name="com.eddy.dicegirl.DiceGirlActivity"
             android:label="@string/app_name_dicegirl"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"></activity>
+            android:windowSoftInputMode="adjustPan" />
 
-        <service
-            android:name="com.eddy.dicegirl.DiceGirlService" />
+        <service android:name="com.eddy.dicegirl.DiceGirlService" />
 
     </application>
 

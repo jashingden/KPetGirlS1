@@ -50,13 +50,20 @@ public class DiceGirlService extends Service {
             if (type.equals("sendUserLogon")) {
                 new DiceGirl.GetUnFinishQuestList(mDiceGirl).start(mAction);
             } else if (type.equals("getUnFinishQuestList")) {
-                if (((DiceGirl.GetUnFinishQuestList)task).PrizeByHour_Is_Finish == true) {
+                DiceGirl.GetUnFinishQuestList questList = (DiceGirl.GetUnFinishQuestList)task;
+                if (questList.DailyLogin_Is_Finish == true) {
+                    new DiceGirl.SendQuestFinish(mDiceGirl, "DailyLogin").start(mAction);
+                } else if (questList.PrizeByHour_Is_Finish == true) {
                     new DiceGirl.SendQuestFinish(mDiceGirl, "PrizeByHour").start(mAction);
                 } else {
                     setAlarm();
                 }
             } else if (type.equals("sendQuestFinish")) {
-                setAlarm();
+                if (((DiceGirl.SendQuestFinish)task).getQuestID().equals("DailyLogin")) {
+                    new DiceGirl.SendQuestFinish(mDiceGirl, "PrizeByHour").start(mAction);
+                } else {
+                    setAlarm();
+                }
             }
         }
     };

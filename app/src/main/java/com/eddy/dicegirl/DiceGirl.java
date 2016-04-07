@@ -95,6 +95,8 @@ public class DiceGirl {
 
     public static class GetUserInfo extends MyTask {
 
+        public String[][] models;
+
         public GetUserInfo(DiceGirl dice) {
             super(dice);
             jsp = "SVC_Dice_Baseball.jsp";
@@ -107,10 +109,23 @@ public class DiceGirl {
 
         @Override
         protected void parseResult(JSONObject obj) throws Exception {
+            JSONArray array = obj.getJSONArray("Model");
+            models = new String[array.length()][2];
+            for (int i=0; i<array.length(); i++) {
+                JSONObject m = array.getJSONObject(i);
+                models[i][0] = m.getString("Model_ID");
+                models[i][1] = m.getString("Model_Name")+"/"+m.getString("Open_Flag")+"/"+m.getString("Category");
+            }
         }
     }
 
     public static class GetRoleFiles extends MyTask {
+
+        public String[] Video;
+        public String[] Preview;
+        public String[] OpenFlag;
+        public String Image;
+        public String[] Info;
 
         public GetRoleFiles(DiceGirl dice, String modelID) {
             super(dice);
@@ -125,12 +140,45 @@ public class DiceGirl {
 
         @Override
         protected void parseResult(JSONObject obj) throws Exception {
+            JSONObject movies = obj.getJSONObject("Movies");
+            for (int i=10; i>=1; i--) {
+                String num = Integer.toString(i);
+                String video = movies.optString("Video_File" + num, "");
+                String preview = movies.optString("Video_PreviewImage"+num, "");
+                String open = movies.optString("Video"+num+"_Open_Flag", "");
+                if (video.length() > 0 || preview.length() > 0) {
+                    if (video.length() > 0) {
+                        if (Video == null) Video = new String[i];
+                        Video[i-1] = video;
+                    }
+                    if (preview.length() > 0) {
+                        if (Preview == null) Preview = new String[i];
+                        Preview[i-1] = preview;
+                    }
+                    if (open.length() > 0) {
+                        if (OpenFlag == null) OpenFlag = new String[i];
+                        OpenFlag[i-1] = open;
+                    }
+                }
+            }
+
+            JSONObject images = obj.getJSONObject("Images");
+            Image = images.getString("Image_Unlock");
+
+            Info = new String[6];
+            Info[0] = obj.optString("Model_ID", "")+"/"+obj.optString("Category", "");
+            Info[1] = obj.optString("Model_Name", "");
+            Info[2] = "年齡:"+obj.optString("Year", "");
+            Info[3] = "身高:"+obj.optString("Height", "");
+            Info[4] = "體重:"+obj.optString("Weight", "");
+            Info[5] = "三圍:"+obj.optString("BWH", "");
         }
     }
 
     public static class GetUnFinishQuestList extends MyTask {
 
         public boolean PrizeByHour_Is_Finish;
+        public boolean DailyLogin_Is_Finish;
 
         public GetUnFinishQuestList(DiceGirl dice) {
             super(dice);
@@ -146,9 +194,11 @@ public class DiceGirl {
         protected void parseResult(JSONArray array) throws Exception {
             for (int i=0; i<array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
-                if (obj.optString("Quest_ID", "").equals("PrizeByHour")) {
+                String Quest_ID = obj.optString("Quest_ID", "");
+                if (Quest_ID.equals("DailyLogin")) {
+                    DailyLogin_Is_Finish = obj.optBoolean("Is_Finish", false);
+                } else if (Quest_ID.equals("PrizeByHour")) {
                     PrizeByHour_Is_Finish = obj.optBoolean("Is_Finish", false);
-                    break;
                 }
             }
         }
@@ -156,15 +206,22 @@ public class DiceGirl {
 
     public static class SendQuestFinish extends MyTask {
 
+        private String Quest_ID;
+
         public SendQuestFinish(DiceGirl dice, String questID) {
             super(dice);
             jsp = "SVC_Dice_Baseball.jsp";
             type = "sendQuestFinish";
+            Quest_ID = questID;
             nameValuePair = new ArrayList<NameValuePair>();
             nameValuePair.add(new BasicNameValuePair("type", type));
             nameValuePair.add(new BasicNameValuePair("uid", dice.uid));
             nameValuePair.add(new BasicNameValuePair("Token", dice.token));
-            nameValuePair.add(new BasicNameValuePair("Quest_ID", questID));
+            nameValuePair.add(new BasicNameValuePair("Quest_ID", Quest_ID));
+        }
+
+        public String getQuestID() {
+            return Quest_ID;
         }
 
         @Override
