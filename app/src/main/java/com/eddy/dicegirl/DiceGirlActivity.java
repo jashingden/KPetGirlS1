@@ -24,8 +24,6 @@ import java.io.File;
 
 public class DiceGirlActivity extends Activity {
 
-    private final static String SDCARD_PATH = "/storage/sdcard1/data/com.eddy.game/dicegirl";
-
     private SuperUser mSU;
     private DiceGirl mDiceGirl;
     private LinearLayout mModels;
@@ -36,7 +34,7 @@ public class DiceGirlActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dice_girl);
 
-        File file = new File(SDCARD_PATH);
+        File file = new File(DiceGirl.sdcardPath);
         file.mkdirs();
 
         mSU = new SuperUser(this, DiceGirl.packageName);
@@ -136,7 +134,7 @@ public class DiceGirlActivity extends Activity {
                 options.inSampleSize = 2;
                 ImageViewUrl image = (ImageViewUrl)role.findViewById(R.id.role_img);
                 image.setBitmapOptions(options);
-                image.load(task.Image, SDCARD_PATH);
+                image.load(task.Image, DiceGirl.sdcardPath);
                 image.setAdjustViewBounds(true);
                 image.setMaxWidth(px_200);
                 image.setMaxHeight(px_200);
@@ -156,7 +154,7 @@ public class DiceGirlActivity extends Activity {
                         View preview = null;
                         if (task.Preview.length > i) {
                             ImageViewUrl img = new ImageViewUrl(activity);
-                            img.load(task.Preview[i], SDCARD_PATH);
+                            img.load(task.Preview[i], DiceGirl.sdcardPath);
                             img.setAdjustViewBounds(true);
                             img.setMaxWidth(px_200);
                             img.setMaxHeight(px_200);
@@ -186,7 +184,7 @@ public class DiceGirlActivity extends Activity {
         @Override
         public void onClick(View v) {
             String url = (String)v.getTag();
-            new OpenMovie(DiceGirlActivity.this).start(url, SDCARD_PATH);
+            new OpenMovie(DiceGirlActivity.this).start(url, DiceGirl.sdcardPath);
         }
     };
 

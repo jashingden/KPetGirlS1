@@ -5,10 +5,19 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class DiceGirlService extends Service {
+
+    private final static String LOG_FILENAME = "DiceGirlService.log";
 
     private DiceGirl mDiceGirl;
 
@@ -32,13 +41,41 @@ public class DiceGirlService extends Service {
 
     private void startCommand(Intent intent) {
         if (mDiceGirl.readFile(DiceGirl.prefFilename)) {
-            new DiceGirl.SendUserLogon(mDiceGirl).start(mAction);
+            String hour = new SimpleDateFormat("HH").format(new Date());
+            String lastHour = getLastHour();
+            if (TextUtils.isEmpty(lastHour) || !lastHour.equals(hour)) {
+                new DiceGirl.SendUserLogon(mDiceGirl).start(mAction);
+            } else {
+                setAlarm();
+            }
         }
     }
 
     @Override
     public void onDestroy() {
         cancelAlarm();
+    }
+
+    public String getLastDate() {
+        SharedPreferences pref = this.getSharedPreferences("DiceGirlService", Context.MODE_PRIVATE);
+        return pref.getString("lastDate", "");
+    }
+
+    public void setLastDate(String today) {
+        SharedPreferences.Editor editor = this.getSharedPreferences("DiceGirlService", Context.MODE_PRIVATE).edit();
+        editor.putString("lastDate", today);
+        editor.commit();
+    }
+
+    public String getLastHour() {
+        SharedPreferences pref = this.getSharedPreferences("DiceGirlService", Context.MODE_PRIVATE);
+        return pref.getString("lastHour", "");
+    }
+
+    public void setLastHour(String hour) {
+        SharedPreferences.Editor editor = this.getSharedPreferences("DiceGirlService", Context.MODE_PRIVATE).edit();
+        editor.putString("lastHour", hour);
+        editor.commit();
     }
 
     private DiceGirl.OnActionHandler mAction = new DiceGirl.OnActionHandler() {
@@ -48,8 +85,19 @@ public class DiceGirlService extends Service {
             Log.d("Eddy", "type=" + type + " bSuccess=" + bSuccess + " result=" + result);
 
             if (type.equals("sendUserLogon")) {
+                addLog("sendUserLogon");
+                String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                String lastDate = getLastDate();
+                if (TextUtils.isEmpty(lastDate) || !lastDate.equals(today)) {
+                    new DiceGirl.GetUserInfo(mDiceGirl).start(mAction);
+                } else {
+                    new DiceGirl.GetUnFinishQuestList(mDiceGirl).start(mAction);
+                }
+            } else if (type.equals("getUserInfo")) {
+                addLog("getUserInfo");
                 new DiceGirl.GetUnFinishQuestList(mDiceGirl).start(mAction);
             } else if (type.equals("getUnFinishQuestList")) {
+                addLog("getUnFinishQuestList");
                 DiceGirl.GetUnFinishQuestList questList = (DiceGirl.GetUnFinishQuestList)task;
                 if (questList.DailyLogin_Is_Finish == true) {
                     new DiceGirl.SendQuestFinish(mDiceGirl, "DailyLogin").start(mAction);
@@ -59,9 +107,15 @@ public class DiceGirlService extends Service {
                     setAlarm();
                 }
             } else if (type.equals("sendQuestFinish")) {
-                if (((DiceGirl.SendQuestFinish)task).getQuestID().equals("DailyLogin")) {
+                String QuestID = ((DiceGirl.SendQuestFinish)task).getQuestID();
+                addLog("sendQuestFinish "+QuestID);
+                if (QuestID.equals("DailyLogin")) {
+                    String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                    setLastDate(today);
                     new DiceGirl.SendQuestFinish(mDiceGirl, "PrizeByHour").start(mAction);
                 } else {
+                    String hour = new SimpleDateFormat("HH").format(new Date());
+                    setLastHour(hour);
                     setAlarm();
                 }
             }
@@ -85,4 +139,13 @@ public class DiceGirlService extends Service {
         am.cancel(getAlarmPendingIntent());
     }
 
+    private void addLog(String text) {
+        try {
+            String data = new SimpleDateFormat("yyyyMMdd HHmmss ").format(new Date()) + text + "\r\n";
+            FileOutputStream os = new FileOutputStream(new File(DiceGirl.sdcardPath+"/"+LOG_FILENAME), true);
+            os.write(data.getBytes("UTF-8"));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }

@@ -29,6 +29,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 public class DiceGirl {
 
+    public final static String sdcardPath = "/sdcard/data/com.eddy.game/dicegirl";
+    //public final static String sdcardPath = "/storage/sdcard1/data/com.eddy.game/dicegirl";
     public static String packageName = "com.yoho.playdicesp";
     public static String prefFilename = "com.yoho.playdicesp.xml";
 

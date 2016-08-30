@@ -99,8 +99,8 @@ public class TestActivity extends Activity {
         root.addView(back, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         wv = new WebView(this);
-        wv.setWebViewClient(new MyWebViewClient());
-        wv.setWebChromeClient(new WebChromeClient());
+//        wv.setWebViewClient(new MyWebViewClient());
+//        wv.setWebChromeClient(new WebChromeClient());
         wv.loadUrl("http://10.1.4.117/apk/test.html");
         root.addView(wv, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -111,10 +111,10 @@ public class TestActivity extends Activity {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             Log.d("Eddy", "shouldOverrideUrlLoading=" + url);
-            if (url.contains("play.google.com") || url.contains(".pdf") || url.contains(".apk")) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                return true;
-            }
+//            if (url.contains("play.google.com") || url.contains(".pdf") || url.contains(".apk")) {
+//                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+//                return true;
+//            }
             return super.shouldOverrideUrlLoading(view, url);
         }
     }
