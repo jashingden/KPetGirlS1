@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.eddy.dicegirl.DiceGirlActivity;
 import com.eddy.kpetgirls1.KPetGirlS1Activity;
+import com.eddy.swag.SwagActivity;
 
 public class MainActivity extends Activity {
 
@@ -27,6 +28,7 @@ public class MainActivity extends Activity {
 
         addCrackedApp(R.drawable.app_icon_kpetgirls1, R.string.app_name_kpetgirls1, KPetGirlS1Activity.class);
         addCrackedApp(R.drawable.app_icon_dicegirl, R.string.app_name_dicegirl, DiceGirlActivity.class);
+        addCrackedApp(R.drawable.app_icon_swag, R.string.app_name_swag, SwagActivity.class);
     }
 
     private void addCrackedApp(int iconId, int nameId, final Class<?> activityClass) {

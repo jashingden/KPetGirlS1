@@ -4,12 +4,16 @@ import android.content.Context;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * 需要有su權限
  * Created by eddyteng on 2016/3/30.
  */
 public class SuperUser {
+
+    public final static String sdcardPath = "/sdcard/data/com.eddy.game";
+    //public final static String sdcardPath = "/storage/sdcard1/data/com.eddy.game";
 
     public static interface OnErrorHandler {
         void OnException(Exception ex);
@@ -22,6 +26,7 @@ public class SuperUser {
      * Target App
      */
     private String packageName;
+    private String app_data_path;
     private String app_prefs_path;
     private String app_files_path;
 
@@ -29,8 +34,29 @@ public class SuperUser {
         this.context = context;
         this.filesDir = context.getFilesDir().getAbsolutePath()+"/";
         this.packageName = packageName;
-        this.app_prefs_path = "/data/data/"+packageName+"/shared_prefs/";
-        this.app_files_path = "/data/data/"+packageName+"/files/";
+        this.app_data_path = "/data/data/"+packageName;
+        this.app_prefs_path = app_data_path+"/shared_prefs/";
+        this.app_files_path = app_data_path+"/files/";
+    }
+
+    public boolean copyFiles(String fromDir, String intoDir, String files, boolean delete, OnErrorHandler handler) {
+//FROM=/data/data/com.machipopo.swag/cache
+//INTO=/sdcard/data/com.eddy.game/swag
+//cp -f $FROM/*.mp4 $INTO/mp4/
+//rm -f $FROM/*.mp4
+//cp -f $FROM/image_manager_disk_cache/* $INTO/image/
+//rm -f $FROM/image_manager_disk_cache/*
+//find $INTO/image/ -type f -size -102400c -exec rm -f {} \;
+        try {
+            String FROM = app_data_path + "/" + fromDir;
+            String INTO = sdcardPath + "/" + intoDir;
+            exec("cp -f "+FROM+"/"+files+" "+INTO);
+            exec("rm -f "+FROM+"/"+files);
+            return true;
+        } catch (Exception ex) {
+            if (handler != null) handler.OnException(ex);
+        }
+        return false;
     }
 
     public boolean copySharedPrefFile(String filename, OnErrorHandler handler) {
@@ -38,12 +64,8 @@ public class SuperUser {
             if (new File(filesDir+filename).exists()) {
                 return true;
             }
-            String copyCmd = "cp "+ app_prefs_path +filename+" "+filesDir;
-            Process p = Runtime.getRuntime().exec("su -c "+copyCmd);
-            p.waitFor();
-            String chmodCmd = "chmod 666 "+filesDir+filename;
-            p = Runtime.getRuntime().exec("su -c "+chmodCmd);
-            p.waitFor();
+            exec("cp -f "+ app_prefs_path +filename+" "+filesDir);
+            exec("chmod 666 "+filesDir+filename);
             return true;
         } catch (Exception ex) {
             if (handler != null) handler.OnException(ex);
@@ -57,10 +79,8 @@ public class SuperUser {
                 if (handler != null) handler.OnMessage("File not found: "+filename);
                 return;
             }
-            String copyCmd = "cp "+filesDir+filename+" "+ app_prefs_path;
-            Process p = Runtime.getRuntime().exec("su -c "+ copyCmd);
-            p.waitFor();
-            if (handler != null) handler.OnMessage("Restore File Done with exit " + p.exitValue());
+            int ret = exec("cp -f "+filesDir+filename+" "+ app_prefs_path);
+            if (handler != null) handler.OnMessage("Restore File Done with exit " + ret);
         } catch (Exception ex) {
             if (handler != null) handler.OnException(ex);
         }
@@ -68,12 +88,16 @@ public class SuperUser {
 
     public void clearFile(String pattern, OnErrorHandler handler) {
         try {
-            String rmCmd = "rm "+ filesDir + pattern;
-            Process p = Runtime.getRuntime().exec("su -c " + rmCmd);
-            p.waitFor();
-            if (handler != null) handler.OnMessage("Clear File Done with exit "+p.exitValue());
+            int ret = exec("rm -f "+ filesDir + pattern);
+            if (handler != null) handler.OnMessage("Clear File Done with exit "+ret);
         } catch (Exception ex) {
             if (handler != null) handler.OnException(ex);
         }
+    }
+
+    private int exec(String cmd) throws Exception {
+        Process p = Runtime.getRuntime().exec("su -c "+cmd);
+        p.waitFor();
+        return p.exitValue();
     }
 }

@@ -3,6 +3,8 @@ package com.eddy.dicegirl;
 import android.content.Context;
 import android.util.Log;
 
+import com.eddy.game.util.SuperUser;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -29,8 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 public class DiceGirl {
 
-    public final static String sdcardPath = "/sdcard/data/com.eddy.game/dicegirl";
-    //public final static String sdcardPath = "/storage/sdcard1/data/com.eddy.game/dicegirl";
+    public final static String sdcardPath = SuperUser.sdcardPath + "/dicegirl";
     public static String packageName = "com.yoho.playdicesp";
     public static String prefFilename = "com.yoho.playdicesp.xml";
 

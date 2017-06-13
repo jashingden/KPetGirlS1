@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.eddy.game.R;
 import com.eddy.game.util.ImageViewUrl;
@@ -44,6 +45,7 @@ public class DiceGirlActivity extends Activity {
             @Override
             public void onClick(View v) {
                 DiceGirlActivity.this.startService(new Intent(DiceGirlActivity.this, DiceGirlService.class));
+                Toast.makeText(DiceGirlActivity.this, "Start DiceGirlService", Toast.LENGTH_SHORT).show();
             }
         });
         this.findViewById(R.id.copy).setOnClickListener(new View.OnClickListener() {
@@ -69,11 +71,13 @@ public class DiceGirlActivity extends Activity {
         @Override
         public void OnException(Exception ex) {
             Log.d("Eddy", ex.getMessage());
+            Toast.makeText(DiceGirlActivity.this, ex.getMessage(), Toast.LENGTH_LONG).show();
         }
 
         @Override
         public void OnMessage(String message) {
             Log.d("Eddy", message);
+            Toast.makeText(DiceGirlActivity.this, message, Toast.LENGTH_LONG).show();
         }
     };
 

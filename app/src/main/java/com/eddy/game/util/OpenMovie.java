@@ -57,6 +57,7 @@ public class OpenMovie implements Runnable {
                 } else {
                     intent.setData(uri);
                 }
+                intent.putExtra("orientation", "land");
                 try {
                     mActivity.startActivity(intent);
                 } catch (Exception ex) {
