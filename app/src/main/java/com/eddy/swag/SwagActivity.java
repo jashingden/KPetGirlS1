@@ -4,12 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.eddy.game.MovieActivity;
 import com.eddy.game.R;
@@ -22,11 +21,13 @@ import java.util.ArrayList;
 public class SwagActivity extends Activity {
 
     private final static String packageName = "com.machipopo.swag";
-    private final static String sdcardPath = SuperUser.sdcardPath + "/swag/mp4";
+    private final static String imagePath = SuperUser.sdcardPath + "/swag/image";
+    private final static String moviePath = SuperUser.sdcardPath + "/swag/mp4";
 
     private SuperUser mSU;
     private ListView mListView;
     private ArrayAdapter<String> mListAdapter;
+    private String mDir;
     private ArrayList<String> mFileList = new ArrayList<String>();
 
     @Override
@@ -34,7 +35,9 @@ public class SwagActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_swag);
 
-        File file = new File(sdcardPath);
+        File file = new File(moviePath);
+        file.mkdirs();
+        file = new File(imagePath);
         file.mkdirs();
 
         mSU = new SuperUser(this, packageName);
@@ -45,18 +48,23 @@ public class SwagActivity extends Activity {
                 if (mSU.copyFiles("cache", "swag/mp4", "*.mp4", true, mHandler)) {
                     ViewUtility.LogAndToast(SwagActivity.this, "copy mp4 files succeeded");
                 }
+                if (mSU.copyFiles("cache/image_manager_disk_cache", "swag/image", "*", true, mHandler)) {
+                    ViewUtility.LogAndToast(SwagActivity.this, "copy jpg files succeeded");
+                }
             }
         });
         this.findViewById(R.id.image).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                mDir = imagePath;
+                listFiles(".jpg", true);
             }
         });
         this.findViewById(R.id.video).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listFiles(".mp4");
+                mDir = moviePath;
+                listFiles(".mp4", false);
             }
         });
         mListView = (ListView)this.findViewById(R.id.list_item);
@@ -72,29 +80,42 @@ public class SwagActivity extends Activity {
 
     @Override
     protected void onResume() {
-        this.findViewById(R.id.video).performClick();
+        if (mDir == null || mDir.equals(moviePath)) {
+            this.findViewById(R.id.video).performClick();
+        } else {
+            this.findViewById(R.id.image).performClick();
+        }
         super.onResume();
     }
 
-    private void listFiles(String ext) {
+    private void listFiles(String ext, boolean rename) {
         mFileList.clear();
-        File file = new File(sdcardPath);
+        File file = new File(mDir);
         ArrayList<File> files = new ArrayList<File>();
 
         for (File f : file.listFiles()) {
-            if (f.getName().endsWith(ext)) {
-                // insert into sorted array
-                boolean insert = false;
-                for (int i=0; i<files.size(); i++) {
-                    if (files.get(i).lastModified() < f.lastModified()) {
-                        files.set(i, f);
-                        insert = true;
-                        break;
+            if (!f.getName().endsWith(ext)) {
+                if (rename) {
+                    String path = f.getPath();
+                    f = new File(path.substring(0, path.lastIndexOf("."))+ext);
+                    if (!new File(path).renameTo(f)) {
+                        continue;
                     }
+                } else {
+                    continue;
                 }
-                if (!insert) {
-                    files.add(f);
+            }
+            // insert into sorted array
+            boolean insert = false;
+            for (int i=0; i<files.size(); i++) {
+                if (files.get(i).lastModified() < f.lastModified()) {
+                    files.add(i, f);
+                    insert = true;
+                    break;
                 }
+            }
+            if (!insert) {
+                files.add(f);
             }
         }
         for (File f : files) {
@@ -104,25 +125,22 @@ public class SwagActivity extends Activity {
     }
 
     private void open(int pos) {
-        Intent intent = new Intent(this, MovieActivity.class);
-//        Intent intent = new Intent(Intent.ACTION_VIEW);
-        String filePath = sdcardPath + "/" + mFileList.get(pos);
-        Uri uri = Uri.parse(filePath);
-        if (filePath.indexOf(".mp4") >= 0) {
-            intent.setDataAndType(uri, "video/mp4");
-        } else if (filePath.indexOf("jpg") >= 0) {
-            intent.setDataAndType(uri, "video/jpeg");
-        } else {
-            intent.setData(uri);
+        String filePath = mDir + "/" + mFileList.get(pos);
+        Intent intent = null;
+        if (filePath.endsWith(".mp4")) {
+            intent = new Intent(this, MovieActivity.class);
+            intent.setDataAndType(Uri.parse(filePath), "video/mp4");
+            intent.putExtra("orientation", "port");
+            intent.putExtra("position", pos);
+            intent.putStringArrayListExtra("files", mFileList);
+            intent.putExtra("dir", mDir);
+        } else if (filePath.endsWith(".jpg")) {
+//            intent = new Intent(Intent.ACTION_VIEW);
+//            intent.setDataAndType(Uri.parse(filePath), "image/jpeg");
+            ((ImageView)this.findViewById(R.id.img)).setImageURI(Uri.parse(filePath));
         }
-        intent.putExtra("orientation", "port");
-        intent.putExtra("position", pos);
-        intent.putStringArrayListExtra("files", mFileList);
-        intent.putExtra("dir", sdcardPath);
-        try {
+        if (intent != null) {
             startActivity(intent);
-        } catch (Exception ex) {
-            startActivity(new Intent(Intent.ACTION_VIEW, uri));
         }
     }
 

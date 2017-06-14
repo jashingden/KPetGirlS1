@@ -40,13 +40,6 @@ public class SuperUser {
     }
 
     public boolean copyFiles(String fromDir, String intoDir, String files, boolean delete, OnErrorHandler handler) {
-//FROM=/data/data/com.machipopo.swag/cache
-//INTO=/sdcard/data/com.eddy.game/swag
-//cp -f $FROM/*.mp4 $INTO/mp4/
-//rm -f $FROM/*.mp4
-//cp -f $FROM/image_manager_disk_cache/* $INTO/image/
-//rm -f $FROM/image_manager_disk_cache/*
-//find $INTO/image/ -type f -size -102400c -exec rm -f {} \;
         try {
             String FROM = app_data_path + "/" + fromDir;
             String INTO = sdcardPath + "/" + intoDir;
