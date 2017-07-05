@@ -5,10 +5,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.eddy.game.MovieActivity;
 import com.eddy.game.R;
@@ -26,7 +30,7 @@ public class SwagActivity extends Activity {
 
     private SuperUser mSU;
     private ListView mListView;
-    private ArrayAdapter<String> mListAdapter;
+    private SwagAdapter mListAdapter;
     private String mDir;
     private ArrayList<String> mFileList = new ArrayList<String>();
 
@@ -68,19 +72,17 @@ public class SwagActivity extends Activity {
             }
         });
         mListView = (ListView)this.findViewById(R.id.list_item);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapter, View view, int pos, long l) {
-                open(pos);
-            }
-        });
-        mListAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mFileList);
+        mListAdapter = new SwagAdapter();
         mListView.setAdapter(mListAdapter);
+    }
+
+    private boolean isMovie() {
+        return mDir == null || mDir.equals(moviePath);
     }
 
     @Override
     protected void onResume() {
-        if (mDir == null || mDir.equals(moviePath)) {
+        if (isMovie()) {
             this.findViewById(R.id.video).performClick();
         } else {
             this.findViewById(R.id.image).performClick();
@@ -94,6 +96,10 @@ public class SwagActivity extends Activity {
         ArrayList<File> files = new ArrayList<File>();
 
         for (File f : file.listFiles()) {
+            if (f.length() < 64000) {
+                f.delete();
+                continue;
+            }
             if (!f.getName().endsWith(ext)) {
                 if (rename) {
                     String path = f.getPath();
@@ -125,8 +131,8 @@ public class SwagActivity extends Activity {
     }
 
     private void open(int pos) {
-        String filePath = mDir + "/" + mFileList.get(pos);
         Intent intent = null;
+        String filePath = mDir + "/" + mFileList.get(pos);
         if (filePath.endsWith(".mp4")) {
             intent = new Intent(this, MovieActivity.class);
             intent.setDataAndType(Uri.parse(filePath), "video/mp4");
@@ -134,10 +140,6 @@ public class SwagActivity extends Activity {
             intent.putExtra("position", pos);
             intent.putStringArrayListExtra("files", mFileList);
             intent.putExtra("dir", mDir);
-        } else if (filePath.endsWith(".jpg")) {
-//            intent = new Intent(Intent.ACTION_VIEW);
-//            intent.setDataAndType(Uri.parse(filePath), "image/jpeg");
-            ((ImageView)this.findViewById(R.id.img)).setImageURI(Uri.parse(filePath));
         }
         if (intent != null) {
             startActivity(intent);
@@ -155,5 +157,73 @@ public class SwagActivity extends Activity {
             ViewUtility.LogAndToast(SwagActivity.this, message);
         }
     };
+
+    private class SwagAdapter extends BaseAdapter {
+
+        @Override
+        public int getCount() {
+            return mFileList.size();
+        }
+
+        @Override
+        public Object getItem(int pos) {
+            if (pos > 0 && pos < mFileList.size()) {
+                return mFileList.get(pos);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public long getItemId(int pos) {
+            return pos;
+        }
+
+        @Override
+        public View getView(int pos, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = getLayoutInflater().inflate(R.layout.item_swag, null);
+                convertView.findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int pos = (int)view.getTag();
+                        if (isMovie()) {
+                            open(pos);
+                        }
+                    }
+                });
+                convertView.findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int pos = (int)view.getTag();
+                        String file = mFileList.get(pos);
+                        String filePath = mDir + "/" + file;
+                        if (new File(filePath).delete()) {
+                            mFileList.remove(pos);
+                            ViewUtility.LogAndToast(SwagActivity.this, "File: "+file+" 已刪除!");
+                            notifyDataSetChanged();
+                        }
+
+                    }
+                });
+            }
+            String file = (String)getItem(pos);
+            String filePath = mDir + "/" + mFileList.get(pos);
+            convertView.findViewById(R.id.text).setTag(pos);
+            convertView.findViewById(R.id.delete).setTag(pos);
+            if (isMovie()) {
+                ((TextView)convertView.findViewById(R.id.text)).setText(file);
+                ((TextView)convertView.findViewById(R.id.text)).setVisibility(View.VISIBLE);
+                ((ImageView)convertView.findViewById(R.id.img)).setVisibility(View.GONE);
+                ((Button)convertView.findViewById(R.id.delete)).setVisibility(View.GONE);
+            } else {
+                ((TextView)convertView.findViewById(R.id.text)).setVisibility(View.GONE);
+                ((ImageView)convertView.findViewById(R.id.img)).setImageURI(Uri.parse(filePath));
+                ((ImageView)convertView.findViewById(R.id.img)).setVisibility(View.VISIBLE);
+                ((Button)convertView.findViewById(R.id.delete)).setVisibility(View.VISIBLE);
+            }
+            return convertView;
+        }
+    }
 
 }
