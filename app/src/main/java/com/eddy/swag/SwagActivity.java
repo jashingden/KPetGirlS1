@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -31,6 +32,7 @@ public class SwagActivity extends Activity {
     private SuperUser mSU;
     private ListView mListView;
     private SwagAdapter mListAdapter;
+    private CheckBox mAutoPlayCheck;
     private String mDir;
     private ArrayList<String> mFileList = new ArrayList<String>();
 
@@ -49,7 +51,7 @@ public class SwagActivity extends Activity {
         this.findViewById(R.id.copy).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mSU.copyFiles("cache", "swag/mp4", "*.mp4", true, mHandler)) {
+                if (mSU.copyFiles("cache", "swag/mp4", "*", true, mHandler)) {
                     ViewUtility.LogAndToast(SwagActivity.this, "copy mp4 files succeeded");
                 }
                 if (mSU.copyFiles("cache/image_manager_disk_cache", "swag/image", "*", true, mHandler)) {
@@ -68,12 +70,13 @@ public class SwagActivity extends Activity {
             @Override
             public void onClick(View view) {
                 mDir = moviePath;
-                listFiles(".mp4", false);
+                listFiles(".mp4", true);
             }
         });
         mListView = (ListView)this.findViewById(R.id.list_item);
         mListAdapter = new SwagAdapter();
         mListView.setAdapter(mListAdapter);
+        mAutoPlayCheck = (CheckBox)this.findViewById(R.id.auto);
     }
 
     private boolean isMovie() {
@@ -103,7 +106,13 @@ public class SwagActivity extends Activity {
             if (!f.getName().endsWith(ext)) {
                 if (rename) {
                     String path = f.getPath();
-                    f = new File(path.substring(0, path.lastIndexOf("."))+ext);
+                    int dot = path.lastIndexOf(".");
+                    if (dot > path.lastIndexOf("/")) {
+                        f = new File(path.substring(0, dot) + ext);
+                    } else {
+                        // no ext
+                        f = new File(path + ext);
+                    }
                     if (!new File(path).renameTo(f)) {
                         continue;
                     }
@@ -140,6 +149,9 @@ public class SwagActivity extends Activity {
             intent.putExtra("position", pos);
             intent.putStringArrayListExtra("files", mFileList);
             intent.putExtra("dir", mDir);
+            if (mAutoPlayCheck.isChecked()) {
+                intent.putExtra("auto", true);
+            }
         }
         if (intent != null) {
             startActivity(intent);
@@ -167,7 +179,7 @@ public class SwagActivity extends Activity {
 
         @Override
         public Object getItem(int pos) {
-            if (pos > 0 && pos < mFileList.size()) {
+            if (pos >= 0 && pos < mFileList.size()) {
                 return mFileList.get(pos);
             } else {
                 return null;

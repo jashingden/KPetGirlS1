@@ -10,8 +10,11 @@ import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -139,7 +142,7 @@ public class DiceGirlService extends Service {
         am.cancel(getAlarmPendingIntent());
     }
 
-    private void addLog(String text) {
+    private static void addLog(String text) {
         try {
             String data = new SimpleDateFormat("yyyyMMdd HHmmss ").format(new Date()) + text + "\r\n";
             FileOutputStream os = new FileOutputStream(new File(DiceGirl.sdcardPath+"/"+LOG_FILENAME), true);
@@ -148,4 +151,31 @@ public class DiceGirlService extends Service {
             ex.printStackTrace();
         }
     }
+
+    public static String getLog() {
+        StringBuffer sb = new StringBuffer();
+        try {
+            FileInputStream is = new FileInputStream(new File(DiceGirl.sdcardPath+"/"+LOG_FILENAME));
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while (null != (line = br.readLine())) {
+                sb.append(line).append("\r\n");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return sb.toString();
+    }
+
+    public static boolean deleteLog() {
+        try {
+            File f = new File(DiceGirl.sdcardPath+"/"+LOG_FILENAME);
+            f.delete();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
 }

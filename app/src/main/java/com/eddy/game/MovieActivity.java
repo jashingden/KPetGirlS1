@@ -6,6 +6,8 @@ import android.content.pm.ActivityInfo;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.Window;
 import android.widget.LinearLayout;
@@ -13,7 +15,6 @@ import android.widget.MediaController;
 import android.widget.VideoView;
 
 import com.eddy.game.util.ViewUtility;
-import com.eddy.swag.SwagActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -98,6 +99,21 @@ public class MovieActivity extends Activity {
             }
         });
         mVideoView.start();
+
+        if (intent.getBooleanExtra("auto", false)) {
+            handler.sendEmptyMessageDelayed(0, 3000);
+        }
     }
 
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 0) {
+                if (mControl.getVisibility() == View.VISIBLE) {
+                    mControl.findViewById(R.id.delete).performClick();
+                }
+                this.sendEmptyMessageDelayed(0, 3000);
+            }
+        }
+    };
 }

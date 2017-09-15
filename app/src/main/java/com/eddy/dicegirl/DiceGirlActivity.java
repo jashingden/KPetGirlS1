@@ -29,6 +29,8 @@ public class DiceGirlActivity extends Activity {
     private DiceGirl mDiceGirl;
     private LinearLayout mModels;
     private LinearLayout mMovies;
+    private Button mDelete;
+    private TextView mLog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +67,23 @@ public class DiceGirlActivity extends Activity {
 
         mModels = (LinearLayout)this.findViewById(R.id.models);
         mMovies = (LinearLayout)this.findViewById(R.id.movies);
+
+        mDelete = (Button)this.findViewById(R.id.delete);
+        mDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (DiceGirlService.deleteLog()) {
+                    mLog.setText("");
+                    findViewById(R.id.log_layout).setVisibility(View.GONE);
+                }
+            }
+        });
+        mLog = (TextView)this.findViewById(R.id.log);
+        String log = DiceGirlService.getLog();
+        if (log.length() > 0) {
+            mLog.setText(log);
+            this.findViewById(R.id.log_layout).setVisibility(View.VISIBLE);
+        }
     }
 
     private SuperUser.OnErrorHandler mHandler = new SuperUser.OnErrorHandler() {
