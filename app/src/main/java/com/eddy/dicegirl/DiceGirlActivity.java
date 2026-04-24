@@ -1,11 +1,16 @@
 package com.eddy.dicegirl;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -37,11 +42,15 @@ public class DiceGirlActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dice_girl);
 
+        checkPermissions();
+
         File file = new File(DiceGirl.sdcardPath);
         file.mkdirs();
 
         mSU = new SuperUser(this, DiceGirl.packageName);
         mDiceGirl = new DiceGirl(this);
+
+        mSU.copyFromSdcard(DiceGirl.prefFilename, mHandler);
 
         this.findViewById(R.id.start).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,7 +62,7 @@ public class DiceGirlActivity extends Activity {
         this.findViewById(R.id.copy).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mSU.copySharedPrefFile(DiceGirl.prefFilename, mHandler);
+                mSU.copyFromSdcard(DiceGirl.prefFilename, mHandler);
             }
         });
         this.findViewById(R.id.userinfo).setOnClickListener(new View.OnClickListener() {
@@ -83,6 +92,27 @@ public class DiceGirlActivity extends Activity {
         if (log.length() > 0) {
             mLog.setText(log);
             this.findViewById(R.id.log_layout).setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    intent.addCategory("android.intent.category.DEFAULT");
+                    intent.setData(Uri.parse(String.format("package:%s", getPackageName())));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Intent intent = new Intent();
+                    intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    startActivity(intent);
+                }
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+            }
         }
     }
 
