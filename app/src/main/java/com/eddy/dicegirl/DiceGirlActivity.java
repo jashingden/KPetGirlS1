@@ -50,8 +50,6 @@ public class DiceGirlActivity extends Activity {
         mSU = new SuperUser(this, DiceGirl.packageName);
         mDiceGirl = new DiceGirl(this);
 
-        mSU.copyFromSdcard(DiceGirl.prefFilename, mHandler);
-
         this.findViewById(R.id.start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,6 +61,14 @@ public class DiceGirlActivity extends Activity {
             @Override
             public void onClick(View v) {
                 mSU.copyFromSdcard(DiceGirl.prefFilename, mHandler);
+            }
+        });
+        this.findViewById(R.id.clear).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mSU.clearFile(DiceGirl.sdcardPath, "*.png", mHandler);
+                mSU.clearFile(DiceGirl.sdcardPath, "*.jpg", mHandler);
+                mSU.clearFile(DiceGirl.sdcardPath, "*.mp4", mHandler);
             }
         });
         this.findViewById(R.id.userinfo).setOnClickListener(new View.OnClickListener() {

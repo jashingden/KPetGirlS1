@@ -94,8 +94,11 @@ public class SuperUser {
     }
 
     public void clearFile(String pattern, OnErrorHandler handler) {
+        clearFile(filesDir, pattern, handler);
+    }
+    public void clearFile(String path, String pattern, OnErrorHandler handler) {
         try {
-            File dir = new File(filesDir);
+            File dir = new File(path);
             File[] files = dir.listFiles();
             if (files != null) {
                 String regex = pattern.replace(".", "\\.").replace("*", ".*");
@@ -105,7 +108,7 @@ public class SuperUser {
                     }
                 }
             }
-            if (handler != null) handler.OnMessage("Clear File Done");
+            if (handler != null) handler.OnMessage("Clear " + pattern + " File Done");
         } catch (Exception ex) {
             if (handler != null) handler.OnException(ex);
         }
@@ -151,14 +154,14 @@ public class SuperUser {
         return false;
     }
 
-    public int exec(String cmd) {
-        try {
-            Process p = Runtime.getRuntime().exec("su -c " + cmd);
-            p.waitFor();
-            return p.exitValue();
-        } catch (Exception ex) {
-            Log.e("SuperUser", "exec failed: " + ex.getMessage());
-            return -1;
-        }
-    }
+//    public int exec(String cmd) {
+//        try {
+//            Process p = Runtime.getRuntime().exec("su -c " + cmd);
+//            p.waitFor();
+//            return p.exitValue();
+//        } catch (Exception ex) {
+//            Log.e("SuperUser", "exec failed: " + ex.getMessage());
+//            return -1;
+//        }
+//    }
 }
